@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestionnaire de Tâches - Style Trello</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Page de connexion -->
+    <div id="auth-page" class="auth-container">
+        <div class="auth-box">
+            <h1>🎯 Gestionnaire de Tâches</h1>
+            <div id="login-form">
+                <h2>Connexion</h2>
+                <input type="text" id="login-username" placeholder="Nom d'utilisateur">
+                <input type="password" id="login-password" placeholder="Mot de passe">
+                <button onclick="login()">Se connecter</button>
+
+                <a href="#" onclick="showRegister()">Créer un compte</a>
+            </div>
+            <div id="register-form" style="display: none;">
+                <h2>Inscription</h2>
+                <input type="text" id="register-username" placeholder="Nom d'utilisateur">
+                <input type="password" id="register-password" placeholder="Mot de passe">
+                <button onclick="register()">S'inscrire</button>
+                <a href="#" onclick="showLogin()">Retour à la connexion</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page principale -->
+    <div id="app-page" style="display: none;">
+        <header>
+            <h1>🎯 Gestionnaire de Tâches</h1>
+            <div class="user-info">
+                <div class="theme-selector">
+                    <button onclick="setTheme('normal')" class="theme-btn" data-theme="normal">🌈 Normal</button>
+                    <button onclick="setTheme('dark')" class="theme-btn" data-theme="dark">🌙 Sombre</button>
+                    <button onclick="setTheme('light')" class="theme-btn" data-theme="light">☀️ Clair</button>
+                </div>
+                <span id="user-display"></span>
+                <button id="discord-btn" onclick="showDiscordModal()" style="display: inline-block;">
+                    <span id="discord-status">💬 Discord</span>
+                </button>
+                <button id="admin-panel-btn-header" onclick="showAdminPanel()" style="display: none; background: #9b59b6; color: white;">👑 Panel Admin</button>
+                <button onclick="logout()">Déconnexion</button>
+            </div>
+        </header>
+
+        <div class="controls">
+            <button onclick="showCategoryModal()">➕ Nouvelle Catégorie</button>
+            <button onclick="showTaskModal()">➕ Nouvelle Tâche</button>
+            <div class="view-toggle">
+                <button class="view-btn active" onclick="switchView('board')">📋 Tableau</button>
+                <button class="view-btn" onclick="switchView('calendar')">📅 Calendrier</button>
+            </div>
+        </div>
+
+        <div id="board" class="board"></div>
+        <div id="calendar" class="calendar-container"></div>
+    </div>
+
+    <!-- Modal Catégorie -->
+    <div id="category-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeCategoryModal()">&times;</span>
+            <h2>Nouvelle Catégorie</h2>
+            <input type="text" id="category-name" placeholder="Nom de la catégorie">
+            
+            <label class="form-label">🎨 Couleur</label>
+            <input type="color" id="category-color" value="#3498db">
+            
+            <label class="form-label">🖼️ Image (optionnel)</label>
+            <div class="image-upload-container">
+                <input type="file" id="category-image" accept="image/*" onchange="previewImage(this, 'category-preview')">
+                <div id="category-preview" class="image-preview"></div>
+            </div>
+            
+            <label class="form-label">👁️ Visible par:</label>
+            <div class="button-group" id="category-visibility">
+                <button type="button" class="toggle-btn" data-value="admin" onclick="toggleVisibility(this, 'category')">
+                    <span class="btn-icon">👑</span> Admin
+                </button>
+                <button type="button" class="toggle-btn" data-value="manager" onclick="toggleVisibility(this, 'category')">
+                    <span class="btn-icon">👔</span> Manager
+                </button>
+                <button type="button" class="toggle-btn" data-value="user" onclick="toggleVisibility(this, 'category')">
+                    <span class="btn-icon">👤</span> User
+                </button>
+                <button type="button" class="toggle-btn active" data-value="all" onclick="toggleVisibility(this, 'category')">
+                    <span class="btn-icon">🌍</span> Tous
+                </button>
+            </div>
+            
+            <button onclick="createCategory()" class="btn-submit">Créer la catégorie</button>
+        </div>
+    </div>
+
+    <!-- Modal Admin Panel -->
+    <div id="admin-modal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <span class="close" onclick="closeAdminPanel()">&times;</span>
+            <h2>👑 Panel Administrateur</h2>
+            
+            <!-- Section Gestion des Grades -->
+            <div class="grade-creation-section">
+                <h3>➕ Créer un nouveau grade</h3>
+                <div class="grade-creation-form">
+                    <input type="text" id="new-grade-name" placeholder="Nom du grade (ex: supervisor, developer, team-lead...)">
+                    <button onclick="createNewGrade()" class="btn-create-grade">
+                        <span class="btn-icon">✨</span>
+                        Créer le grade
+                    </button>
+                </div>
+                <p class="grade-info">💡 Les grades personnalisés seront disponibles dans tous les sélecteurs de l'application.</p>
+            </div>
+
+            <!-- Section Gestion des Statuts -->
+            <div class="grade-creation-section" style="background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);">
+                <h3>📊 Créer un nouveau statut</h3>
+                <div class="grade-creation-form">
+                    <input type="text" id="new-status-name" placeholder="Nom du statut (ex: en_attente, validé...)">
+                    <input type="text" id="new-status-emoji" placeholder="Emoji (ex: ⏳, ✔️, 🔄...)" maxlength="2">
+                    <input type="color" id="new-status-color" value="#3498db">
+                    <button onclick="createNewStatus()" class="btn-create-grade">
+                        <span class="btn-icon">📊</span>
+                        Créer le statut
+                    </button>
+                </div>
+                <p class="grade-info">💡 Les statuts personnalisés seront disponibles dans le sélecteur de statut des tâches.</p>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <h3 style="color: #2c3e50; font-size: 20px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 24px;">👥</span>
+                    Gestion des Utilisateurs
+                </h3>
+            </div>
+            <div id="admin-users-list"></div>
+        </div>
+    </div>
+
+    <!-- Modal Tâche -->
+    <div id="task-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeTaskModal()">&times;</span>
+            <h2 id="task-modal-title">Nouvelle Tâche</h2>
+            <input type="hidden" id="task-id">
+            
+            <label class="form-label">📝 Titre</label>
+            <input type="text" id="task-title" placeholder="Titre de la tâche">
+            
+            <label class="form-label">📄 Description</label>
+            <textarea id="task-description" placeholder="Description détaillée..."></textarea>
+            
+            <label class="form-label">📁 Catégorie</label>
+            <select id="task-category"></select>
+            
+            <label class="form-label">👤 Assigné à</label>
+            <select id="task-assigned"></select>
+            
+            <label class="form-label">📊 Statut</label>
+            <select id="task-status"></select>
+            
+            <div class="date-row">
+                <div class="date-field">
+                    <label class="form-label">📅 Date de début</label>
+                    <input type="date" id="task-start-date">
+                </div>
+                <div class="date-field">
+                    <label class="form-label">⏰ Date d'échéance</label>
+                    <input type="date" id="task-due-date">
+                </div>
+            </div>
+            
+            <label class="form-label">🎨 Couleur</label>
+            <input type="color" id="task-color" value="#ffffff">
+            
+            <label class="form-label">🖼️ Image (optionnel)</label>
+            <div class="image-upload-container">
+                <input type="file" id="task-image" accept="image/*" onchange="previewImage(this, 'task-preview')">
+                <div id="task-preview" class="image-preview"></div>
+            </div>
+            
+            <label class="form-label">👁️ Visible par:</label>
+            <div class="button-group" id="task-visibility">
+                <button type="button" class="toggle-btn" data-value="admin" onclick="toggleVisibility(this, 'task')">
+                    <span class="btn-icon">👑</span> Admin
+                </button>
+                <button type="button" class="toggle-btn" data-value="manager" onclick="toggleVisibility(this, 'task')">
+                    <span class="btn-icon">👔</span> Manager
+                </button>
+                <button type="button" class="toggle-btn" data-value="user" onclick="toggleVisibility(this, 'task')">
+                    <span class="btn-icon">👤</span> User
+                </button>
+                <button type="button" class="toggle-btn active" data-value="all" onclick="toggleVisibility(this, 'task')">
+                    <span class="btn-icon">🌍</span> Tous
+                </button>
+            </div>
+            
+            <!-- Section Commentaires -->
+            <div class="comments-section" id="comments-section" style="display: none;">
+                <div class="comments-header">
+                    <div class="comments-title">
+                        <span>💬</span>
+                        <span>Commentaires</span>
+                    </div>
+                    <span id="comments-count" class="comments-count">0</span>
+                </div>
+                <div class="comments-list" id="comments-list">
+                    <div class="no-comments">Aucun commentaire pour le moment</div>
+                </div>
+                <div class="comment-input-container">
+                    <textarea id="comment-input" class="comment-input" placeholder="Écrivez votre commentaire ici..."></textarea>
+                    <button onclick="addComment()" class="comment-submit">💬 Envoyer</button>
+                </div>
+            </div>
+            
+            <button onclick="saveTask()" class="btn-submit">Enregistrer la tâche</button>
+        </div>
+    </div>
+
+    <!-- Modal Édition Utilisateur -->
+    <div id="edit-user-modal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="close" onclick="closeEditUserModal()">&times;</span>
+            <h2>✏️ Modifier le profil utilisateur</h2>
+            <input type="hidden" id="edit-user-id">
+            
+            <label class="form-label">👤 Pseudo</label>
+            <input type="text" id="edit-user-username" placeholder="Nouveau pseudo">
+            
+            <label class="form-label">🔒 Nouveau mot de passe (optionnel)</label>
+            <input type="password" id="edit-user-password" placeholder="Laisser vide pour ne pas changer">
+            <p style="font-size: 12px; color: #999; margin: 5px 0 15px 0;">
+                Laissez vide si vous ne souhaitez pas changer le mot de passe
+            </p>
+            
+            <button onclick="saveUserProfile()" class="btn-submit">
+                💾 Enregistrer les modifications
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal Discord -->
+    <div id="discord-modal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="close" onclick="closeDiscordModal()">&times;</span>
+            <h2>💬 Liaison Discord</h2>
+            <p style="color: #666; margin-bottom: 20px;">Liez votre compte Discord pour recevoir des notifications lorsqu'une tâche vous est assignée.</p>
+            
+            <div id="discord-not-linked" style="display: none;">
+                <label class="form-label">🆔 Votre ID Discord</label>
+                <input type="text" id="discord-id-input" placeholder="Exemple: 123456789012345678">
+                <p style="font-size: 12px; color: #999; margin: 10px 0;">
+                    Pour obtenir votre ID Discord:<br>
+                    1. Activez le mode développeur dans Discord (Paramètres > Avancés)<br>
+                    2. Clic droit sur votre profil > Copier l'identifiant
+                </p>
+                <button onclick="linkDiscord()" class="btn-submit" style="background: linear-gradient(135deg, #5865F2 0%, #4752C4 100%);">
+                    🔗 Lier mon compte Discord
+                </button>
+            </div>
+            
+            <div id="discord-linked" style="display: none;">
+                <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <p style="color: #2ecc71; font-weight: 600; margin-bottom: 5px;">✅ Compte Discord lié</p>
+                    <p style="color: #666; font-size: 14px;">ID: <span id="discord-id-display"></span></p>
+                </div>
+                <button onclick="unlinkDiscord()" class="btn-submit" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">
+                    🔓 Délier mon compte Discord
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="theme.js"></script>
+    <script src="auth.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
