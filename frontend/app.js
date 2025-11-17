@@ -1046,3 +1046,89 @@ async function initApp() {
 if (authToken && currentUser) {
     initApp();
 }
+
+
+// Gestion des documents
+let documents = [];
+let currentDocument = null;
+
+function switchView(view) {
+    currentView = view;
+    
+    document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    document.getElementById('board').style.display = 'none';
+    document.getElementById('calendar').classList.remove('active');
+    document.getElementById('documents').classList.remove('active');
+    
+    if (view === 'board') {
+        document.getElementById('board').style.display = 'flex';
+    } else if (view === 'calendar') {
+        document.getElementById('calendar').classList.add('active');
+        renderCalendar();
+    } else if (view === 'documents') {
+        document.getElementById('documents').classList.add('active');
+        loadDocuments();
+    }
+}
+
+async function loadDocuments() {
+    try {
+        const response = await fetch(`${API_URL}/documents`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        documents = await response.json();
+        renderDocuments();
+    } catch (error) {
+        console.error('Erreur chargement documents:', error);
+        renderDocuments();
+    }
+}
+
+function renderDocuments() {
+    const container = document.getElementById('documents');
+    
+    container.innerHTML = `
+        <div class="documents-header">
+            <div class="documents-title">📄 Documents</div>
+            <div class="documents-subtitle">Créez et organisez vos documents</div>
+        </div>
+        <div class="documents-actions">
+            <button class="doc-action-btn" onclick="createNewDocument()">
+                ➕ Nouveau document
+            </button>
+        </div>
+        <div class="documents-grid" id="documents-grid">
+            ${documents.length === 0 ? `
+                <div class="empty-documents">
+                    <div class="empty-documents-icon">📄</div>
+                    <div class="empty-documents-text">Aucun document pour le moment</div>
+                    <button class="doc-action-btn" onclick="createNewDocument()">
+                        Créer votre premier document
+                    </button>
+                </div>
+            ` : documents.map(doc => `
+                <div class="document-card" onclick="openDocument(${doc.id})">
+                    <div class="document-icon">${doc.icon || '📄'}</div>
+                    <div class="document-title">${doc.title || 'Sans titre'}</div>
+                    <div class="document-meta">
+                        <span>${new Date(doc.updated_at).toLocaleDateString('fr-FR')}</span>
+                        <span>${doc.author}</span>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function createNewDocument() {
+    alert('Fonctionnalité Documents en cours de développement!\n\nBientôt disponible:\n- Éditeur de texte riche\n- Markdown support\n- Collaboration en temps réel\n- Export PDF');
+}
+
+function openDocument(id) {
+    const doc = documents.find(d => d.id === id);
+    if (doc) {
+        alert(`Ouverture du document: ${doc.title}\n\nÉditeur en cours de développement...`);
+    }
+}
