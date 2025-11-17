@@ -61,6 +61,23 @@
         <div id="board" class="board"></div>
         <div id="calendar" class="calendar-container"></div>
         <div id="documents" class="documents-container"></div>
+        
+        <!-- Document Editor -->
+        <div id="document-editor" class="document-editor" style="display: none;">
+            <div class="document-editor-toolbar">
+                <button class="toolbar-btn" onclick="closeDocumentEditor()">← Retour</button>
+                <button class="toolbar-btn" onclick="saveDocument()">💾 Enregistrer</button>
+                <button class="toolbar-btn" onclick="deleteDocument()" style="color: #eb5757;">🗑️ Supprimer</button>
+                <span id="save-status" style="margin-left: auto; color: #2ecc71; font-size: 14px;"></span>
+            </div>
+            <div class="document-editor-header">
+                <div class="document-icon-large" onclick="changeDocIcon()" title="Changer l'icône">
+                    <span id="doc-icon">📄</span>
+                </div>
+                <input type="text" id="doc-title" class="document-editor-title" placeholder="Sans titre" onchange="saveDocument()">
+            </div>
+            <textarea id="doc-content" class="document-editor-content" placeholder="Commencez à écrire..."></textarea>
+        </div>
     </div>
 
     <!-- Modal Catégorie -->

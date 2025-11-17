@@ -498,3 +498,62 @@ app.put('/api/admin/users/:id/profile', authenticateToken, (req, res) => {
     );
   }
 });
+
+
+// Routes Documents
+app.get('/api/documents', authenticateToken, (req, res) => {
+  db.all(`SELECT documents.*, users.username as author 
+          FROM documents 
+          LEFT JOIN users ON documents.created_by = users.id
+          ORDER BY documents.updated_at DESC`,
+    [], (err, docs) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(docs);
+    }
+  );
+});
+
+app.get('/api/documents/:id', authenticateToken, (req, res) => {
+  db.get(`SELECT documents.*, users.username as author 
+          FROM documents 
+          LEFT JOIN users ON documents.created_by = users.id
+          WHERE documents.id = ?`,
+    [req.params.id], (err, doc) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (!doc) return res.status(404).json({ error: 'Document non trouvé' });
+      res.json(doc);
+    }
+  );
+});
+
+app.post('/api/documents', authenticateToken, (req, res) => {
+  const { title, icon, content } = req.body;
+  
+  db.run(`INSERT INTO documents (title, icon, content, created_by) VALUES (?, ?, ?, ?)`,
+    [title || 'Sans titre', icon || '📄', content || '', req.user.id],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ id: this.lastID, title, icon });
+    }
+  );
+});
+
+app.put('/api/documents/:id', authenticateToken, (req, res) => {
+  const { title, icon, content } = req.body;
+  
+  db.run(`UPDATE documents SET title = ?, icon = ?, content = ?, updated_at = CURRENT_TIMESTAMP
+          WHERE id = ?`,
+    [title, icon, content, req.params.id],
+    (err) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ success: true });
+    }
+  );
+});
+
+app.delete('/api/documents/:id', authenticateToken, (req, res) => {
+  db.run('DELETE FROM documents WHERE id = ?', [req.params.id], (err) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true });
+  });
+});

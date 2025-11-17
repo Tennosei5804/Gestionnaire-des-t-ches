@@ -1990,10 +1990,27 @@ header h1 {
     margin-bottom: 24px;
 }
 
-/* Document Editor Modal */
+/* Document Editor */
 .document-editor {
     background: #ffffff;
-    padding: 48px 96px;
+    padding: 0;
+    min-height: 100vh;
+}
+
+.document-editor-header {
+    padding: 48px 96px 24px 96px;
+}
+
+.document-icon-large {
+    font-size: 78px;
+    margin-bottom: 16px;
+    cursor: pointer;
+    display: inline-block;
+    transition: transform 0.2s;
+}
+
+.document-icon-large:hover {
+    transform: scale(1.1);
 }
 
 .document-editor-title {
@@ -2002,9 +2019,10 @@ header h1 {
     border: none;
     outline: none;
     width: 100%;
-    margin-bottom: 16px;
     color: #37352f;
     font-family: inherit;
+    background: transparent;
+    padding: 0;
 }
 
 .document-editor-title::placeholder {
@@ -2013,14 +2031,16 @@ header h1 {
 
 .document-editor-content {
     font-size: 16px;
-    line-height: 1.6;
+    line-height: 1.8;
     border: none;
     outline: none;
     width: 100%;
-    min-height: 400px;
-    resize: vertical;
+    min-height: calc(100vh - 300px);
+    resize: none;
     color: #37352f;
     font-family: inherit;
+    background: transparent;
+    padding: 0 96px 48px 96px;
 }
 
 .document-editor-content::placeholder {
@@ -2029,14 +2049,15 @@ header h1 {
 
 .document-editor-toolbar {
     position: sticky;
-    top: 60px;
+    top: 0;
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(8px);
-    padding: 12px 0;
+    padding: 12px 96px;
     border-bottom: 1px solid rgba(55, 53, 47, 0.09);
     display: flex;
     gap: 8px;
-    margin-bottom: 24px;
+    align-items: center;
+    z-index: 100;
 }
 
 .toolbar-btn {

@@ -1122,13 +1122,126 @@ function renderDocuments() {
     `;
 }
 
-function createNewDocument() {
-    alert('Fonctionnalité Documents en cours de développement!\n\nBientôt disponible:\n- Éditeur de texte riche\n- Markdown support\n- Collaboration en temps réel\n- Export PDF');
+async function createNewDocument() {
+    try {
+        const response = await fetch(`${API_URL}/documents`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({
+                title: 'Sans titre',
+                icon: '📄',
+                content: ''
+            })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+            openDocument(data.id);
+        } else {
+            alert(data.error);
+        }
+    } catch (error) {
+        alert('Erreur lors de la création du document');
+    }
 }
 
-function openDocument(id) {
-    const doc = documents.find(d => d.id === id);
-    if (doc) {
-        alert(`Ouverture du document: ${doc.title}\n\nÉditeur en cours de développement...`);
+async function openDocument(id) {
+    try {
+        const response = await fetch(`${API_URL}/documents/${id}`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        const doc = await response.json();
+        
+        if (response.ok) {
+            currentDocument = doc;
+            showDocumentEditor(doc);
+        } else {
+            alert(doc.error);
+        }
+    } catch (error) {
+        alert('Erreur lors du chargement du document');
+    }
+}
+
+function showDocumentEditor(doc) {
+    document.getElementById('documents').style.display = 'none';
+    document.getElementById('document-editor').style.display = 'block';
+    
+    document.getElementById('doc-icon').textContent = doc.icon || '📄';
+    document.getElementById('doc-title').value = doc.title || 'Sans titre';
+    document.getElementById('doc-content').value = doc.content || '';
+    
+    // Auto-save toutes les 2 secondes
+    if (window.autoSaveInterval) clearInterval(window.autoSaveInterval);
+    window.autoSaveInterval = setInterval(() => saveDocument(), 2000);
+}
+
+function closeDocumentEditor() {
+    if (window.autoSaveInterval) clearInterval(window.autoSaveInterval);
+    saveDocument();
+    
+    document.getElementById('document-editor').style.display = 'none';
+    document.getElementById('documents').style.display = 'block';
+    document.getElementById('documents').classList.add('active');
+    
+    loadDocuments();
+}
+
+async function saveDocument() {
+    if (!currentDocument) return;
+    
+    const title = document.getElementById('doc-title').value;
+    const icon = document.getElementById('doc-icon').textContent;
+    const content = document.getElementById('doc-content').value;
+    
+    try {
+        await fetch(`${API_URL}/documents/${currentDocument.id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ title, icon, content })
+        });
+        
+        // Mise à jour silencieuse
+        document.getElementById('save-status').textContent = '✓ Enregistré';
+        setTimeout(() => {
+            document.getElementById('save-status').textContent = '';
+        }, 2000);
+    } catch (error) {
+        console.error('Erreur sauvegarde:', error);
+    }
+}
+
+async function deleteDocument() {
+    if (!currentDocument) return;
+    
+    if (!confirm(`Supprimer le document "${currentDocument.title}" ?`)) return;
+    
+    try {
+        const response = await fetch(`${API_URL}/documents/${currentDocument.id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        if (response.ok) {
+            closeDocumentEditor();
+        }
+    } catch (error) {
+        alert('Erreur lors de la suppression');
+    }
+}
+
+function changeDocIcon() {
+    const newIcon = prompt('Entrez un emoji pour l\'icône:', currentDocument.icon || '📄');
+    if (newIcon) {
+        document.getElementById('doc-icon').textContent = newIcon;
+        saveDocument();
     }
 }
